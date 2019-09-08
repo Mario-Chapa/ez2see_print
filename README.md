@@ -24,3 +24,5 @@ ez_to_see_print(header: str, data, style: str = "red") -> None
 ```
 
 ## Screenshots
+![ez2c1](https://user-images.githubusercontent.com/6504237/64487948-46603a80-d27c-11e9-9155-a0d9ebafe598.PNG)
+![ez2c2](https://user-images.githubusercontent.com/6504237/64487949-4829fe00-d27c-11e9-8e02-c775f329cf55.PNG)
