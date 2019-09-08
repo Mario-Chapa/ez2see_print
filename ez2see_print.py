@@ -24,7 +24,7 @@ H_RED = '\x1b[1;31;47m'
 H_GREEN = '\x1b[1;32;47m'
 H_ORANGE = '\x1b[1;33;47m'
 H_BLUE = '\x1b[1;34;47m'
-H_PURPLE = '\x1b[1;35;47'
+H_PURPLE = '\x1b[1;35;47m'
 H_CYAN = '\x1b[1;36;47m'
 
 # You can use this to test the colors output in your terminal
