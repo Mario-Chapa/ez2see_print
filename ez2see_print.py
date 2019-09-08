@@ -99,14 +99,14 @@ if __name__ == "__main__":
     test_dict = {"test": "value", "another_key": "last", "key": "val"}
     separator = "\n" * 3
 
-    ez_to_see_print("I am ez_to_see test", test_string, "red")
+    ez_to_see_print("Test with a string, red style", test_string, "red")
     print(separator)  # print a white line
-    ez_to_see_print("I am ez_to_see with list", test_list, "orange")
+    ez_to_see_print("Test with a list, orange style", test_list, "orange")
     print(separator)
-    ez_to_see_print("I am ez_to_see ", test_dict, "green")
+    ez_to_see_print("Test with a dict, green style", test_dict, "green")
     print(separator)
-    ez_to_see_print("I am ez_to_see test", test_string, "blue")
+    ez_to_see_print("Test with a string, blue style", test_string, "blue")
     print(separator)
-    ez_to_see_print("I am ez_to_see with list", test_list, "purple")
+    ez_to_see_print("Test with a list, purple style", test_list, "purple")
     print(separator)
-    ez_to_see_print("I am ez_to_see ", test_dict, "cyan")
+    ez_to_see_print("Test with a dict, cyan style", test_dict, "cyan")
