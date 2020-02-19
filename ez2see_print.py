@@ -1,4 +1,4 @@
-import json  # for dict pretty formating
+# [python - How to pretty print nested dictionaries? - Stack Overflow](https://stackoverflow.com/questions/3229419/how-to-pretty-print-nested-dictionaries#3314411)
 
 # Back to notmal coloring
 C_NORMAL = '\x1b[0m'
@@ -27,21 +27,6 @@ H_BLUE = '\x1b[1;34;47m'
 H_PURPLE = '\x1b[1;35;47m'
 H_CYAN = '\x1b[1;36;47m'
 
-# You can use this to test the colors output in your terminal
-def print_colors_table():
-    """
-    prints table of formatted text format options
-    """
-    for style in range(8):
-        for fg in range(30, 38):
-            s1 = ''
-            for bg in range(40, 48):
-                format = ';'.join([str(style), str(fg), str(bg)])
-                s1 += '\x1b[%sm %s \x1b[0m' % (format, format)
-            print(s1)
-        print('\n')
-
-
 # styles need 3 colors, for header, separators and contents in that order
 styles_ez2c = {
     "red": (H_RED, B_RED, F_ORANGE),
@@ -52,31 +37,83 @@ styles_ez2c = {
     "purple": (H_PURPLE, B_PURPLE, F_BLUE),
 }
 
+DEFAULT_STYLE = "red"
+
 LINE_WIDTH = 60
 LOGSEPARATOR_DB = "=" * LINE_WIDTH
 LOGSEPARATOR_ST = "*" * LINE_WIDTH
 
+import inspect
 
-def ez_to_see_print(header: str, data, style: str = "red") -> None:
+def prettify_this(value, htchar='\t', lfchar='\n', indent=0):
+    nlch = lfchar + htchar * (indent + 1)
+    if type(value) is dict:
+        items = [
+            nlch + repr(key) + ': ' + prettify_this(value[key], htchar, lfchar, indent + 1)
+            for key in value
+        ]
+        return '{%s}' % (','.join(items) + lfchar + htchar * indent)
+    elif type(value) is list:
+        items = [
+            nlch + prettify_this(item, htchar, lfchar, indent + 1)
+            for item in value
+        ]
+        return '[%s]' % (','.join(items) + lfchar + htchar * indent)
+    elif type(value) is tuple:
+        items = [
+            nlch + prettify_this(item, htchar, lfchar, indent + 1)
+            for item in value
+        ]
+        return '(%s)' % (','.join(items) + lfchar + htchar * indent)
+    else:
+        return repr(value)
+
+def ez_to_see_print(header: str, data, style: str = DEFAULT_STYLE) -> None:
     """
-    print helper. Useful when debbuging and want to easily spot a line amont a
+    print helper. Useful when debbuging and want to easily spot a line among a
     stream of logging output.
     """
+    log_string = "\n"
     # red is the default
-    colors = styles_ez2c.get(style, styles_ez2c["red"])
+    colors = styles_ez2c.get(style, styles_ez2c[DEFAULT_STYLE])
     # Formatting for pretty-printing of lists and dicts
-    if isinstance(data, dict):
-        data = json.dumps(data, indent=4, sort_keys=True)
-    elif isinstance(data, list):
-        data = '\n'.join(data)
+    type_of_data = str(type(data))
+    data = prettify_this(data)
 
-    print(f"{colors[1]}{__file__.center(LINE_WIDTH)}{C_NORMAL}")
-    print(f"{colors[1]}{LOGSEPARATOR_ST}{C_NORMAL}")
-    print(f"{colors[0]}{header.center(LINE_WIDTH)}{C_NORMAL}")
-    print(colors[2])
-    print(data)
-    print(C_NORMAL)
-    print(f"{colors[1]}{LOGSEPARATOR_DB}{C_NORMAL}")
+    # Info about the methood from which this print was called
+    # We get method name and line number in source file
+    # We also obtain all local variables at the moment this call was made
+    code_frame = inspect.currentframe().f_back
+    local_names = code_frame.f_locals
+    local_names_str = "local namespace seen by this frame:" + "\n" + "\n" + prettify_this(local_names) + "\n"
+    caller_frame = inspect.currentframe().f_back
+    called_from = caller_frame.f_code.co_name + ": L" + str(caller_frame.f_lineno)
+
+    # And one level up, to the method that called the method from which this print
+    # was called
+    called_from_frame = caller_frame.f_back
+    if called_from_frame:
+        line_num_in_caller = called_from_frame.f_lineno
+        caller_name = called_from_frame.f_code.co_name
+        caller_name_str = "This Method's Caller's name: " + str(caller_name)
+        line_from_caller_name_str = "L" + str(line_num_in_caller)
+
+    log_string += f"{colors[1]}{__file__.center(LINE_WIDTH)}{C_NORMAL}\n"
+    log_string += f"{colors[1]}{LOGSEPARATOR_ST}{C_NORMAL}\n"
+    log_string += f"{colors[0]}{called_from.center(LINE_WIDTH)}{C_NORMAL}\n"
+    if called_from_frame:
+        log_string += f"{colors[0]}{caller_name_str.center(LINE_WIDTH)}{C_NORMAL}\n"
+        log_string += f"{colors[0]}{line_from_caller_name_str.center(LINE_WIDTH)}{C_NORMAL}\n"
+    log_string += f"{colors[0]}{header.center(LINE_WIDTH)}{C_NORMAL}\n"
+    log_string += f"{colors[0]}{type_of_data.center(LINE_WIDTH)}{C_NORMAL}\n"
+    log_string += colors[2] + "\n"
+    log_string += data + "\n"
+    log_string += f"{colors[2]}{LOGSEPARATOR_ST}{C_NORMAL}\n"
+    log_string += f"{colors[2]}{local_names_str.center(LINE_WIDTH)}{C_NORMAL}\n"
+    log_string += C_NORMAL + "\n"
+    log_string += f"{colors[1]}{LOGSEPARATOR_DB}{C_NORMAL}\n"
+
+    return log_string
 
 
 def print_format_table():
@@ -99,14 +136,14 @@ if __name__ == "__main__":
     test_dict = {"test": "value", "another_key": "last", "key": "val"}
     separator = "\n" * 3
 
-    ez_to_see_print("Test with a string, red style", test_string, "red")
+    print(ez_to_see_print("Test with a string, red style", test_string, "red"))
     print(separator)  # print a white line
-    ez_to_see_print("Test with a list, orange style", test_list, "orange")
+    print(ez_to_see_print("Test with a list, orange style", test_list, "orange"))
     print(separator)
-    ez_to_see_print("Test with a dict, green style", test_dict, "green")
+    print(ez_to_see_print("Test with a dict, green style", test_dict, "green"))
     print(separator)
-    ez_to_see_print("Test with a string, blue style", test_string, "blue")
+    print(ez_to_see_print("Test with a string, blue style", test_string, "blue"))
     print(separator)
-    ez_to_see_print("Test with a list, purple style", test_list, "purple")
+    print(ez_to_see_print("Test with a list, purple style", test_list, "purple"))
     print(separator)
-    ez_to_see_print("Test with a dict, cyan style", test_dict, "cyan")
+    print(ez_to_see_print("Test with a dict, cyan style", test_dict, "cyan"))
