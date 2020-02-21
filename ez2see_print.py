@@ -1,4 +1,5 @@
-# [python - How to pretty print nested dictionaries? - Stack Overflow](https://stackoverflow.com/questions/3229419/how-to-pretty-print-nested-dictionaries#3314411)
+import inspect
+import prettifier
 
 # Back to notmal coloring
 C_NORMAL = '\x1b[0m'
@@ -43,30 +44,6 @@ LINE_WIDTH = 60
 LOGSEPARATOR_DB = "=" * LINE_WIDTH
 LOGSEPARATOR_ST = "*" * LINE_WIDTH
 
-import inspect
-
-def prettify_this(value, htchar='\t', lfchar='\n', indent=0):
-    nlch = lfchar + htchar * (indent + 1)
-    if type(value) is dict:
-        items = [
-            nlch + repr(key) + ': ' + prettify_this(value[key], htchar, lfchar, indent + 1)
-            for key in value
-        ]
-        return '{%s}' % (','.join(items) + lfchar + htchar * indent)
-    elif type(value) is list:
-        items = [
-            nlch + prettify_this(item, htchar, lfchar, indent + 1)
-            for item in value
-        ]
-        return '[%s]' % (','.join(items) + lfchar + htchar * indent)
-    elif type(value) is tuple:
-        items = [
-            nlch + prettify_this(item, htchar, lfchar, indent + 1)
-            for item in value
-        ]
-        return '(%s)' % (','.join(items) + lfchar + htchar * indent)
-    else:
-        return repr(value)
 
 def ez_to_see_print(header: str, data, style: str = DEFAULT_STYLE) -> None:
     """
@@ -78,14 +55,14 @@ def ez_to_see_print(header: str, data, style: str = DEFAULT_STYLE) -> None:
     colors = styles_ez2c.get(style, styles_ez2c[DEFAULT_STYLE])
     # Formatting for pretty-printing of lists and dicts
     type_of_data = str(type(data))
-    data = prettify_this(data)
+    data = prettifier.prettify(data)
 
     # Info about the methood from which this print was called
     # We get method name and line number in source file
     # We also obtain all local variables at the moment this call was made
     code_frame = inspect.currentframe().f_back
     local_names = code_frame.f_locals
-    local_names_str = "local namespace seen by this frame:" + "\n" + "\n" + prettify_this(local_names) + "\n"
+    local_names_str = "local namespace seen by this frame:" + "\n" + "\n" + prettifier.prettify(local_names) + "\n"
     caller_frame = inspect.currentframe().f_back
     called_from = caller_frame.f_code.co_name + ": L" + str(caller_frame.f_lineno)
 
