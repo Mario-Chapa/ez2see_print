@@ -1,52 +1,40 @@
 import inspect
 import prettifier
+from os import get_terminal_size
 import ez2see_constants as ezc
 
+LINE_WIDTH = 60
+LOGSEPARATOR_DB = "=" * LINE_WIDTH
+LOGSEPARATOR_ST = "*" * LINE_WIDTH
 
-def ez_to_see_print(header: str, data, style: str = ezc.DEFAULT_STYLE) -> None:
+def _get_colorized_line_str(text, color):
+    color_str = f"{color}{text}{ezc.C_NORMAL}\n"
+    return color_str
+
+def _get_centered_str(text):
+    return text.center(LINE_WIDTH)
+
+def get_colored_data_str(header: str, data, style: str = ezc.DEFAULT_STYLE) -> None:
     """
     print helper. Useful when debbuging and want to easily spot a line among a
     stream of logging output.
     """
-    log_string = "\n"
-    # red is the default
-    colors = ezc.styles_ez2c[style]
+
+    # try to obtain the specified style, fallback to DEFAULT
+    colors = ezc.styles_ez2c.get(style, ezc.styles_ez2c[ezc.DEFAULT_STYLE])
+
     # Formatting for pretty-printing of lists and dicts
-    type_of_data = str(type(data))
+    type_of_data = "The type of this Data is: " + str(type(data))
     data = prettifier.prettify(data)
 
-    # Info about the methood from which this print was called
-    # We get method name and line number in source file
-    # We also obtain all local variables at the moment this call was made
-    code_frame = inspect.currentframe().f_back
-    local_names = code_frame.f_locals
-    local_names_str = "local namespace seen by this frame:" + "\n" + "\n" + prettifier.prettify(local_names) + "\n"
-    caller_frame = inspect.currentframe().f_back
-    called_from = caller_frame.f_code.co_name + ": L" + str(caller_frame.f_lineno)
-
-    # And one level up, to the method that called the method from which this print
-    # was called
-    called_from_frame = caller_frame.f_back
-    if called_from_frame:
-        line_num_in_caller = called_from_frame.f_lineno
-        caller_name = called_from_frame.f_code.co_name
-        caller_name_str = "This Method's Caller's name: " + str(caller_name)
-        line_from_caller_name_str = "L" + str(line_num_in_caller)
-
-    log_string += f"{colors[1]}{__file__.center(ezc.LINE_WIDTH)}{ezc.C_NORMAL}\n"
-    log_string += f"{colors[1]}{ezc.LOGSEPARATOR_ST}{ezc.C_NORMAL}\n"
-    log_string += f"{colors[0]}{called_from.center(ezc.LINE_WIDTH)}{ezc.C_NORMAL}\n"
-    if called_from_frame:
-        log_string += f"{colors[0]}{caller_name_str.center(ezc.LINE_WIDTH)}{ezc.C_NORMAL}\n"
-        log_string += f"{colors[0]}{line_from_caller_name_str.center(ezc.LINE_WIDTH)}{ezc.C_NORMAL}\n"
-    log_string += f"{colors[0]}{header.center(ezc.LINE_WIDTH)}{ezc.C_NORMAL}\n"
-    log_string += f"{colors[0]}{type_of_data.center(ezc.LINE_WIDTH)}{ezc.C_NORMAL}\n"
-    log_string += colors[2] + "\n"
-    log_string += data + "\n"
-    log_string += f"{colors[2]}{ezc.LOGSEPARATOR_ST}{ezc.C_NORMAL}\n"
-    log_string += f"{colors[2]}{local_names_str.center(ezc.LINE_WIDTH)}{ezc.C_NORMAL}\n"
-    log_string += ezc.C_NORMAL + "\n"
-    log_string += f"{colors[1]}{ezc.LOGSEPARATOR_DB}{ezc.C_NORMAL}\n"
+    log_string = _get_colorized_line_str(LOGSEPARATOR_DB, colors[1])
+    log_string += _get_colorized_line_str(_get_centered_str(header), colors[0])
+    log_string += _get_colorized_line_str(_get_centered_str(type_of_data), colors[0])
+    log_string += _get_colorized_line_str(LOGSEPARATOR_ST, colors[2])
+    log_string += _get_colorized_line_str(data, colors[2])
+    log_string += _get_colorized_line_str(LOGSEPARATOR_ST, colors[2])
+    log_string += _get_colorized_line_str(_get_centered_str(" "), colors[0])
+    log_string += _get_colorized_line_str(LOGSEPARATOR_DB, colors[1])
 
     return log_string
 
@@ -71,16 +59,16 @@ if __name__ == "__main__":
     test_dict = {"test": "value", "another_key": "last", "key": "val"}
     separator = "\n" * 3
 
-    print(ez_to_see_print("Test with a string, red style", test_string, "red"))
+    print(get_colored_data_str("Test with a string, red style", test_string, "red"))
     print(separator)  # print a white line
-    print(ez_to_see_print("Test with a list, orange style", test_list, "orange"))
+    print(get_colored_data_str("Test with a list, orange style", test_list, "orange"))
     print(separator)
-    print(ez_to_see_print("Test with a dict, green style", test_dict, "green"))
+    print(get_colored_data_str("Test with a dict, green style", test_dict, "green"))
     print(separator)
-    print(ez_to_see_print("Test with a string, blue style", test_string, "blue"))
+    print(get_colored_data_str("Test with a string, blue style", test_string, "blue"))
     print(separator)
-    print(ez_to_see_print("Test with a list, purple style", test_list, "purple"))
+    print(get_colored_data_str("Test with a list, purple style", test_list, "purple"))
     print(separator)
-    print(ez_to_see_print("Test with a dict, cyan style", test_dict, "cyan"))
+    print(get_colored_data_str("Test with a dict, cyan style", test_dict, "cyan"))
     print(separator)
     print_format_table()
